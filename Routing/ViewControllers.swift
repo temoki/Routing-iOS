@@ -1,14 +1,16 @@
 import UIKit
 
 let logNotificationName = Notification.Name("LOG")
+let presentNotificationName = Notification.Name("PRESENT")
 
 class RootViewController: ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         NotificationCenter.default.addObserver(forName: logNotificationName, object: nil, queue: .main) { [weak self] _ in
-            if let root = self {
-                Self.log("root", root)
-            }
+            if let root = self { Self.log("root", root) }
+        }
+        NotificationCenter.default.addObserver(forName: presentNotificationName, object: nil, queue: .main) { [weak self] _ in
+            self?.forcePresent(ViewController(), animated: true, completion: nil)
         }
     }
 }
@@ -17,9 +19,10 @@ class RootNavigationController: UINavigationController {
     override func viewDidLoad() {
         super.viewDidLoad()
         NotificationCenter.default.addObserver(forName: logNotificationName, object: nil, queue: .main) { [weak self] _ in
-            if let root = self {
-                Self.log("root", root)
-            }
+            if let root = self { Self.log("root", root) }
+        }
+        NotificationCenter.default.addObserver(forName: presentNotificationName, object: nil, queue: .main) { [weak self] _ in
+            self?.forcePresent(ViewController(), animated: true, completion: nil)
         }
     }
 }
@@ -28,9 +31,10 @@ class RootTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         NotificationCenter.default.addObserver(forName: logNotificationName, object: nil, queue: .main) { [weak self] _ in
-            if let root = self {
-                Self.log("root", root)
-            }
+            if let root = self { Self.log("root", root) }
+        }
+        NotificationCenter.default.addObserver(forName: presentNotificationName, object: nil, queue: .main) { [weak self] _ in
+            self?.forcePresent(ViewController(), animated: true, completion: nil)
         }
     }
 }
@@ -119,6 +123,10 @@ class ViewController: UIViewController {
                 self?.tabBarController?.present(ViewController(), animated: true)
             })))
         }
+        
+        vstack.addArrangedSubview(UIButton(primaryAction: .init(title: "Present on Root", handler: { _ in
+            NotificationCenter.default.post(name: presentNotificationName, object: nil)
+        })))
     }
     
     private let vstack = UIStackView()
@@ -174,6 +182,16 @@ extension UIViewController {
         print(padding + "  ", "children", viewController.children.count)
         for (index, child) in viewController.children.enumerated() {
             log("children[\(index)]", child, level + 2)
+        }
+    }
+    
+    func forcePresent(_ viewController: UIViewController, animated: Bool, completion: (() -> Void)?) {
+        if let presentedViewController = self.presentedViewController {
+            presentedViewController.dismiss(animated: animated, completion: { [weak self] in
+                self?.present(viewController, animated: animated, completion: completion)
+            })
+        } else {
+            present(viewController, animated: animated, completion: completion)
         }
     }
 }
